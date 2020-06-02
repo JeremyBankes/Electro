@@ -226,8 +226,6 @@ public class MainClient {
 
 		long currentTime;
 		final long second = 1000000000;
-		int ticks = 0;
-		int frames = 0;
 		long tickTime = second / TPS;
 		long tickTimer = System.nanoTime();
 		long secondTimer = System.nanoTime();
@@ -240,19 +238,14 @@ public class MainClient {
 					tickTimer = currentTime;
 				}
 				tickTimer += tickTime;
-				ticks++;
 				tick();
 			}
 			if (currentTime - frameTimer > frameTime) {
 				frameTimer += frameTime;
-				frames++;
 				render();
 			}
 			if (currentTime - secondTimer > second) {
 				secondTimer += second;
-				// System.out.println("TPS: " + ticks + ", Frames: " + frames);
-				ticks = 0;
-				frames = 0;
 			}
 		}
 	}
@@ -302,6 +295,10 @@ public class MainClient {
 		String text = input.getText();
 		input.setText("");
 		return text;
+	}
+
+	public static void setInput(String text) {
+		input.setText(text);
 	}
 
 	public static void setInputEnabled(boolean enabled) {
