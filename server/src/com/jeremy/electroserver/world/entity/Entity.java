@@ -5,90 +5,90 @@ import com.sineshore.serialization.Batch;
 
 public abstract class Entity {
 
-    protected String uuid;
-    protected float x, y;
-    protected float xv, yv;
-    protected int width, height;
-    protected World world;
-    protected int age;
-    protected boolean alive;
+	protected String uuid;
+	protected float x, y;
+	protected float xv, yv;
+	protected int width, height;
+	protected World world;
+	protected int age;
+	protected boolean alive;
 
-    public Entity(String uuid) {
-	this.uuid = uuid;
-	alive = true;
-    }
+	public Entity(String uuid) {
+		this.uuid = uuid;
+		alive = true;
+	}
 
-    public void tick() {
-	age++;
-    }
+	public void tick() {
+		age++;
+	}
 
-    public abstract void onSpawn(World world);
+	public abstract void onSpawn(World world);
 
-    public abstract void onDeath(World world);
+	public abstract void onDeath(World world);
 
-    public abstract Batch getSpawnBatch();
+	public abstract Batch getSpawnBatch();
 
-    public abstract Batch getUpdateBatch();
+	public abstract Batch getUpdateBatch();
 
-    public abstract Batch getDeathBatch();
+	public abstract Batch getDeathBatch();
 
-    public World getWorld() {
-	return world;
-    }
+	public World getWorld() {
+		return world;
+	}
 
-    public String getUuid() {
-	return uuid;
-    }
+	public String getUuid() {
+		return uuid;
+	}
 
-    public boolean isAlive() {
-	return alive;
-    }
+	public boolean isAlive() {
+		return alive;
+	}
 
-    public float getX() {
-	return x;
-    }
+	public float getX() {
+		return x;
+	}
 
-    public float getY() {
-	return y;
-    }
+	public float getY() {
+		return y;
+	}
 
-    public void setX(float x) {
-	this.x = x;
-    }
+	public void setX(float x) {
+		this.x = x;
+	}
 
-    public void setY(float y) {
-	this.y = y;
-    }
+	public void setY(float y) {
+		this.y = y;
+	}
 
-    public float getXVelocity() {
-	return xv;
-    }
+	public float getXVelocity() {
+		return xv;
+	}
 
-    public float getYVelocity() {
-	return yv;
-    }
+	public float getYVelocity() {
+		return yv;
+	}
 
-    public void setxVelocity(float xVelocity) {
-	this.xv = xVelocity;
-    }
+	public void setxVelocity(float xVelocity) {
+		this.xv = xVelocity;
+	}
 
-    public void setyVelocity(float yVelocity) {
-	this.yv = yVelocity;
-    }
+	public void setyVelocity(float yVelocity) {
+		this.yv = yVelocity;
+	}
 
-    public void addVelocity(float x, float y) {
-	this.xv += x;
-	this.yv += y;
-    }
+	public void addVelocity(float x, float y) {
+		this.xv += x;
+		this.yv += y;
+	}
 
-    public void addPosition(float x, float y) {
-	this.x += x;
-	this.y += y;
-    }
+	public void addPosition(float x, float y) {
+		this.x += x;
+		this.y += y;
+	}
 
-    @Override
-    public String toString() {
-	return getClass().getSimpleName() + "(" + uuid + ")";
-    }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + uuid + ")";
+	}
 
 }

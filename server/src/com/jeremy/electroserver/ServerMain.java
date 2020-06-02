@@ -1,27 +1,38 @@
 package com.jeremy.electroserver;
 
+import java.io.IOException;
 import java.util.Random;
 
-import com.jeremy.electroserver.network.Network;
+import com.jeremy.electroserver.network.NetworkServer;
 import com.jeremy.electroserver.world.World;
 
-public class Main {
+public class ServerMain {
 
 	private static World world;
 
 	private static boolean running;
 
-	public static void start() {
-		Network.init();
-		Network.start();
+	public static NetworkServer networkServer;
 
+	public static void start() {
+		try {
+			networkServer = new NetworkServer();
+			System.out.println("Starting network...");
+			networkServer.start();
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
+
+		System.out.println("Creating world...");
 		world = new World("Branch");
 
+		System.out.println("Starting server logic...");
 		running = true;
 		run();
 	}
 
 	private static void run() {
+		System.out.println("The server has successfully initialized.");
 		long currentTime;
 		final long second = 1000000000;
 		int ticks = 0;
@@ -40,8 +51,6 @@ public class Main {
 			}
 			if (currentTime - secondTimer > second) {
 				secondTimer += second;
-				if (!running)
-					System.out.println("TPS: " + ticks);
 				ticks = 0;
 			}
 		}
@@ -61,12 +70,9 @@ public class Main {
 			"[!] {0} was killed by {1}.", //
 			"[!] {0}'s life was taken by {1}.", //
 			"[!] {0}'s existence was ended by {1}.", //
-			"[!] {0} didn't stand a chance against {1}.", //
-			"[!] {0} will always regret fighting {1}.", //
 			"[!] {1} tore {0}'s life from them.", //
 			"[!] {1} brought {0} to an end.", //
 			"[!] {1} stole {0}'s life.", //
-			"[!] {1} removed {0} from existence.", //
 			"[!] {1} ended {0}." //
 
 	};
@@ -76,7 +82,7 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		Main.start();
+		ServerMain.start();
 	}
 
 }

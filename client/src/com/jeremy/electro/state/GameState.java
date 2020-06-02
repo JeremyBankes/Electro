@@ -2,10 +2,9 @@ package com.jeremy.electro.state;
 
 import java.awt.Graphics2D;
 
-import com.jeremy.electro.Main;
-import com.jeremy.electro.Player;
+import com.jeremy.electro.MainClient;
+import com.jeremy.electro.entity.Player;
 import com.jeremy.electro.input.Input;
-import com.jeremy.electro.network.Network;
 import com.jeremy.electro.state.ui.GameInterface;
 import com.jeremy.electro.state.world.World;
 
@@ -19,13 +18,13 @@ public class GameState extends State {
 
 	@Override
 	public void tick() {
-		if (!Network.isConnected()) {
+		if (!MainClient.networkClient.isConnected()) {
 			State.currentState = LOBBY_STATE;
 			LOBBY_STATE.message = "Server closed.";
 		}
 
 		if (Input.isKeyPressed(Input.KEY_ENTER, Input.KEY_T, Input.KEY_SLASH)) {
-			Main.focusChat();
+			MainClient.focusChat();
 		}
 
 		Player.tick();
