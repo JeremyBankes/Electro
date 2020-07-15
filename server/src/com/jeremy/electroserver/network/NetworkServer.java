@@ -3,13 +3,16 @@ package com.jeremy.electroserver.network;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.jeremy.electroserver.PlayerClient;
-import com.jeremy.networking.Server;
+import com.jeremy.electroserver.ServerMain;
+import com.jeremy.networking.Endpoint;
+import com.jeremy.networking.TCPServer;
 import com.sineshore.serialization.Batch;
 
-public class NetworkServer extends Server {
+public class NetworkServer extends TCPServer {
 
 	public static final int PORT = 37427;
 
@@ -20,19 +23,36 @@ public class NetworkServer extends Server {
 	}
 
 	@Override
-	protected void onReceiveClient(String address, int port, InputStream inputStream, OutputStream outputStream) {
-		while (isConnected(address, port)) {
+	protected void onReceiveClient(Endpoint endpoint, InputStream inputStream, OutputStream outputStream) {
+		while (isConnected(endpoint)) {
 			try {
-				Receiver.receive(outputStream, new Batch(inputStream), address, port);
+				Receiver.receive(outputStream, new Batch(inputStream), endpoint);
 			} catch (IOException exception) {
-				exception.printStackTrace();
-				disconnect(address, port);
+				try {
+					disconnect(endpoint);
+				} catch (IOException disconnect) {
+					disconnect.printStackTrace();
+				}
 			}
 		}
 	}
 
+	@Override
+	protected void onDisconnect(Endpoint endpoint) {
+		registered.entrySet().removeIf(entry -> {
+			PlayerClient client = entry.getValue();
+			if (client.endpoint.equals(endpoint)) {
+				System.out.printf("Player disconnected %s.%n", client);
+				ServerMain.networkServer.broadcastMessage("[!] '" + client.getName() + "' has left the game!");
+				ServerMain.getWorld().deleteEntity(client.getUuid());
+				return true;
+			}
+			return false;
+		});
+	}
+
 	public void broadcast(Batch batch, PlayerClient... blacklist) {
-		registered.values().forEach(client -> {
+		new ArrayList<PlayerClient>(registered.values()).forEach(client -> {
 			if (!isBlacklisted(blacklist, client)) client.send(batch);
 		});
 	}

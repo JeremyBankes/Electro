@@ -10,7 +10,7 @@ import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineEvent.Type;
 import javax.sound.sampled.LineListener;
 
-import com.jeremy.electro.MainClient;
+import com.jeremy.electro.ClientMain;
 import com.jeremy.electro.entity.Player;
 import com.sineshore.serialization.Batch;
 
@@ -39,7 +39,7 @@ public class Sound {
 		soundBatch.add("name", name);
 		soundBatch.add("x", x);
 		soundBatch.add("y", y);
-		MainClient.networkClient.send(soundBatch);
+		ClientMain.networkClient.send(soundBatch);
 	}
 
 	private static void playClip(String path, float volume) throws Exception {

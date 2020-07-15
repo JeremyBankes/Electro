@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
-import com.jeremy.electro.MainClient;
+import com.jeremy.electro.ClientMain;
+import com.jeremy.electro.Particle.Particle;
 import com.jeremy.electro.entity.Entity;
 
 public class World {
@@ -22,16 +23,19 @@ public class World {
 	private HashMap<String, Entity> entities;
 	private HashSet<Entity> toDie;
 
+	private HashSet<Particle> particles;
+
 	private BufferedImage background;
 
 	public World(String name) {
 		toSpawn = new HashSet<>();
 		entities = new HashMap<>();
 		toDie = new HashSet<>();
+		particles = new HashSet<>();
 		this.name = name;
 
 		try {
-			background = ImageIO.read(MainClient.class.getResourceAsStream("/background.png"));
+			background = ImageIO.read(ClientMain.class.getResourceAsStream("/background.png"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -43,16 +47,24 @@ public class World {
 		entities.values().forEach(entity -> entity.tick());
 		toDie.forEach(entity -> entities.remove(entity.uuid));
 		toDie.clear();
+
+		particles.forEach(particle -> particle.tick());
+		particles.removeIf(particle -> !particle.isAlive());
 	}
 
 	public void render(Graphics2D g) {
 		g.drawImage(background, 0, 0, null);
 		entities.values().forEach(entity -> entity.render(g));
+		particles.forEach(particle -> particle.render(g));
 	}
 
 	public List<Entity> getCollidedEntities(Rectangle rectangle) {
-		return entities.values().stream().filter(entity -> rectangle.intersects(entity.x, entity.y, entity.width, entity.height))
+		return entities.values().stream().filter(entity -> rectangle.intersects(entity.position.x, entity.position.y, entity.width, entity.height))
 				.collect(Collectors.toList());
+	}
+
+	public void spawnParticle(Particle particle) {
+		particles.add(particle);
 	}
 
 	public void spawnEntity(Entity entity) {

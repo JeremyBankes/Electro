@@ -3,10 +3,10 @@ package com.jeremy.electro.network;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.jeremy.networking.Client;
+import com.jeremy.networking.TCPClient;
 import com.sineshore.serialization.Batch;
 
-public class NetworkClient extends Client {
+public class NetworkClient extends TCPClient {
 
 	@Override
 	protected void onServerContact(InputStream inputStream) {
@@ -15,7 +15,6 @@ public class NetworkClient extends Client {
 				Receiver.receive(new Batch(inputStream));
 			}
 		} catch (IOException exception) {
-			exception.printStackTrace();
 			try {
 				disconnect();
 			} catch (IOException disconnect) {

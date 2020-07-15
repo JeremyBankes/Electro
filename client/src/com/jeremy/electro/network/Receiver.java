@@ -2,7 +2,7 @@ package com.jeremy.electro.network;
 
 import java.awt.Color;
 
-import com.jeremy.electro.MainClient;
+import com.jeremy.electro.ClientMain;
 import com.jeremy.electro.audio.Sound;
 import com.jeremy.electro.entity.Character;
 import com.jeremy.electro.entity.Entity;
@@ -22,8 +22,8 @@ public class Receiver {
 			String uuid = (String) batch.get("uuid");
 			Character character = new Character(uuid);
 			character.name = (String) batch.get("name");
-			character.x = (int) ((float) batch.get("x"));
-			character.y = (int) ((float) batch.get("y"));
+			character.position.x = (int) ((float) batch.get("x"));
+			character.position.y = (int) ((float) batch.get("y"));
 			character.width = (int) batch.get("width");
 			character.height = (int) batch.get("height");
 			character.color = new Color((int) batch.get("color"));
@@ -33,37 +33,37 @@ public class Receiver {
 				Player.character = character;
 				Player.alive = true;
 			}
-			Sound.playPublicSound(character.x, character.y, "respawn");
+			Sound.playPublicSound(character.position.x, character.position.y, "respawn");
 		} else if (type.equals("update")) {
 			String uuid = (String) batch.get("uuid");
 			if (State.GAME_STATE.hasWorld()) {
 				Character character = (Character) State.GAME_STATE.getWorld().getEntity(uuid);
 				if (character != null) {
-					character.x = (int) ((float) batch.get("x"));
-					character.y = (int) ((float) batch.get("y"));
-					character.setHandX((float) batch.get("hx"));
-					character.setHandY((float) batch.get("hy"));
+					character.position.x = (int) ((float) batch.get("x"));
+					character.position.y = (int) ((float) batch.get("y"));
+					character.hand.position.x = (float) batch.get("hx");
+					character.hand.position.y = (float) batch.get("hy");
 				}
 			}
 		} else if (type.equals("info")) {
 			if (State.GAME_STATE.hasWorld()) {
 				Player.health = (float) batch.get("health");
-				Player.xVelocity += (float) batch.get("addXv");
-				Player.yVelocity += (float) batch.get("addYv");
+				Player.velocity.x += (float) batch.get("addXv");
+				Player.velocity.y += (float) batch.get("addYv");
 			}
 		} else if (type.equals("death")) {
 			String uuid = (String) batch.get("uuid");
 			if (State.GAME_STATE.getWorld().hasEntity(uuid)) {
 				Entity entity = State.GAME_STATE.getWorld().getEntity(uuid);
-				Sound.playPublicSound(entity.x, entity.y, "death");
+				Sound.playPublicSound(entity.position.x, entity.position.y, "death");
 				State.GAME_STATE.getWorld().deleteEntity(uuid);
 			}
 			if (Player.uuid.equals(uuid)) {
 				Player.alive = false;
-				MainClient.sendMessage("You have died! Type /respawn to come back into the world.");
+				ClientMain.sendMessage("You have died! Type /respawn to come back into the world.");
 			}
 		} else if (type.equals("message")) {
-			MainClient.sendMessage((String) batch.get("message"));
+			ClientMain.sendMessage((String) batch.get("message"));
 		} else if (type.equals("sound")) {
 			Sound.playLocalSound((String) batch.get("name"), (float) batch.get("volume"));
 		} else {

@@ -1,180 +1,150 @@
 package com.jeremy.electro.entity;
 
+import static com.jeremy.electro.input.Input.*;
+import static java.lang.Math.*;
+
 import java.awt.Rectangle;
-import java.util.List;
 import java.util.UUID;
 
-import com.jeremy.electro.MainClient;
+import com.jeremy.electro.ClientMain;
 import com.jeremy.electro.audio.Sound;
 import com.jeremy.electro.input.Input;
 import com.jeremy.electro.state.State;
-import com.jeremy.utilities.Utilities;
+import com.jeremy.utilities.Vector2;
 import com.sineshore.serialization.Batch;
 
 public class Player {
 
 	public static final String uuid = UUID.randomUUID().toString();
-	public static final float HAND_DISTANCE = 25;
-	public static final float HAND_EXTENDED = 35;
+	private static final float MAX_SPEED = 5.0f;
+	public static final float HAND_DISTANCE = 25.0f;
+	public static final float HAND_MAX_EXTEND = 20.0f;
+	public static final float ACCELERATION = 0.75f;
 	public static final int HAND_SIZE = 10;
-	private static final float ACCELERATION = 0.5f;
-	private static final float DECELERATION = 0.5f;
-	private static final float MAX_VELOCITY = 5.0f;
+	public static final int SWING_LIFETIME = 20;
+	public static final int SWING_APEX = 10;
+	public static final int FOOTSTEP_INTERVAL = 20;
+	public static final float KNOCKBACK = 15.0f;
+	public static final float DASH_ENERGY = 0.15f;
+	public static final float DASH_POWER = 10f;
 
 	public static String name;
 
 	public static Character character;
-	public static float xVelocity, yVelocity;
-	public static float handDistance = HAND_DISTANCE;
+	public static Vector2 velocity = new Vector2();
 
-	public static boolean click;
+	public static boolean dash;
 	public static float health, maxHealth;
+	public static float energy = 1.0f;
 	public static boolean alive;
 
-	private static int footstepTimer;
-	private static boolean footstep;
+	private static Vector2 input = new Vector2();
+
+	public static int swingTimer = -1;
+	public static float handExtend;
+
+	private static int footstepTimer = -1;
 
 	public static void tick() {
-		if (State.GAME_STATE.getWorld() == null) {
-			return;
-		}
-		if (character == null) {
-			return;
-		}
+		if (State.GAME_STATE.getWorld() == null || character == null) return;
 
-		if (Input.isKeyPressed(Input.KEY_UP, Input.KEY_W)) {
-			if (yVelocity > -MAX_VELOCITY) {
-				yVelocity -= ACCELERATION;
-				if (yVelocity < -MAX_VELOCITY) {
-					yVelocity = -MAX_VELOCITY;
+		input.set(0.0f);
+		if (isKeyPressed(KEY_UP, KEY_W)) input.y -= 1.0f;
+		if (isKeyPressed(KEY_DOWN, KEY_S)) input.y += 1.0f;
+		if (isKeyPressed(KEY_RIGHT, KEY_D)) input.x += 1.0f;
+		if (isKeyPressed(KEY_LEFT, KEY_A)) input.x -= 1.0f;
+		input.normalize();
+
+		float acceleration = ACCELERATION;
+		Vector2 want = input.scale(MAX_SPEED);
+		if (Input.isButtonPressed(MOUSE_RIGHT) && !input.isZero()) {
+			if (!dash) {
+				if (energy > DASH_ENERGY) {
+					want.scale(DASH_POWER);
+					acceleration *= DASH_POWER;
+					energy -= DASH_ENERGY;
+					dash = true;
 				}
 			}
-		} else if (yVelocity < 0) {
-			yVelocity += DECELERATION;
-			if (yVelocity > 0) {
-				yVelocity = 0;
-			}
+		} else dash = false;
+
+		if (velocity.x < want.x) {
+			velocity.x += acceleration;
+			if (velocity.x > want.x) velocity.x = want.x;
+		} else if (velocity.x > want.x) {
+			velocity.x -= acceleration;
+			if (velocity.x < want.x) velocity.x = want.x;
+		}
+		if (velocity.y < want.y) {
+			velocity.y += acceleration;
+			if (velocity.y > want.y) velocity.y = want.y;
+		} else if (velocity.y > want.y) {
+			velocity.y -= acceleration;
+			if (velocity.y < want.y) velocity.y = want.y;
 		}
 
-		if (Input.isKeyPressed(Input.KEY_DOWN, Input.KEY_S)) {
-			if (yVelocity < MAX_VELOCITY) {
-				yVelocity += ACCELERATION;
-				if (yVelocity > MAX_VELOCITY) {
-					yVelocity = MAX_VELOCITY;
-				}
+		character.position.add(velocity);
+		character.position.x = Math.min(ClientMain.WIDTH - character.width, Math.max(0, character.position.x));
+		character.position.y = Math.min(ClientMain.HEIGHT - character.height, Math.max(0, character.position.y));
+
+		if (isButtonPressed(MOUSE_LEFT) && swingTimer == -1) {
+			Sound.playPublicSound(character.position.x, character.position.y, "swing1", "swing2", "swing3");
+			swingTimer = 0;
+		}
+		if (swingTimer != -1) {
+			float progress = (float) (swingTimer >= SWING_LIFETIME ? 0 : swingTimer) / SWING_LIFETIME;
+			handExtend = (float) (HAND_MAX_EXTEND * (log10(progress + 1.0 / 100.0) - 2.0 * progress + 2.0));
+			if (swingTimer == SWING_APEX) {
+				Rectangle handBounds = new Rectangle(round(character.hand.position.x), round(character.hand.position.y), HAND_SIZE, HAND_SIZE);
+				State.GAME_STATE.getWorld().getCollidedEntities(handBounds).forEach(victim -> {
+					if (!(victim instanceof Character)) return;
+					if (victim == character) return;
+					Sound.playPublicSound(character.position.x, character.position.y, "hurt1", "hurt2", "hurt3");
+					Vector2 knockback = victim.position.clone().subtract(character.position).normalize().scale(KNOCKBACK);
+					Batch harmBatch = new Batch("harm");
+					harmBatch.add("uuid", uuid);
+					harmBatch.add("victim", victim.uuid.toString());
+					harmBatch.add("damage", 10.0f);
+					harmBatch.add("xv", knockback.x);
+					harmBatch.add("yv", knockback.y);
+					ClientMain.networkClient.send(harmBatch);
+				});
 			}
-		} else if (yVelocity > 0) {
-			yVelocity -= DECELERATION;
-			if (yVelocity < 0) {
-				yVelocity = 0;
-			}
+			if (swingTimer >= SWING_LIFETIME) swingTimer = -1;
+			else swingTimer++;
 		}
 
-		if (Input.isKeyPressed(Input.KEY_LEFT, Input.KEY_A)) {
-			if (xVelocity > -MAX_VELOCITY) {
-				xVelocity -= ACCELERATION;
-				if (xVelocity < -MAX_VELOCITY) {
-					xVelocity = -MAX_VELOCITY;
-				}
-			}
-		} else if (xVelocity < 0) {
-			xVelocity += DECELERATION;
-			if (xVelocity > 0) {
-				xVelocity = 0;
-			}
-		}
-
-		if (Input.isKeyPressed(Input.KEY_RIGHT, Input.KEY_D)) {
-			if (xVelocity < MAX_VELOCITY) {
-				xVelocity += ACCELERATION;
-				if (xVelocity > MAX_VELOCITY) {
-					xVelocity = MAX_VELOCITY;
-				}
-			}
-		} else if (xVelocity > 0) {
-			xVelocity -= DECELERATION;
-			if (xVelocity < 0) {
-				xVelocity = 0;
-			}
-		}
-
-		boolean movementKeyDown = Input.isKeyPressed(Input.KEY_UP, Input.KEY_DOWN, Input.KEY_RIGHT, Input.KEY_LEFT, Input.KEY_W, Input.KEY_S,
-				Input.KEY_A, Input.KEY_D);
-		if (movementKeyDown) {
-			if (footstepTimer == 0) {
-				footstep = true;
-			}
-			footstepTimer++;
-			if (footstepTimer > 15) {
+		if (footstepTimer == -1) {
+			if (!input.isZero()) {
 				footstepTimer = 0;
 			}
 		} else {
-			footstepTimer = 0;
-		}
-
-		if (footstep && (xVelocity != 0 || yVelocity != 0)) {
-			Sound.playPublicSound(character.x, character.y, "footstep1", "footstep2", "footstep3");
-			footstep = false;
-		}
-
-		double theta = Math.atan2(Input.CURSOR.y - (character.y + character.height / 2), Input.CURSOR.x - (character.x + character.width / 2));
-		theta += theta < 0 ? Math.PI * 2 : 0;
-
-		if (Input.isButtonPressed(Input.MOUSE_LEFT)) {
-			if (!click) {
-				click = true;
-				Sound.playPublicSound(character.x, character.y, "swing1", "swing2", "swing3");
-			}
-			if (handDistance < HAND_EXTENDED) {
-				if (handDistance < HAND_EXTENDED) {
-					handDistance *= 1.2;
+			if (!input.isZero()) {
+				if (footstepTimer == 0) {
+					Sound.playPublicSound(character.position.x, character.position.y, "footstep1", "footstep2", "footstep3");
 				}
-				if (handDistance > HAND_EXTENDED) {
-					handDistance = HAND_EXTENDED;
-					List<Entity> entities = State.GAME_STATE.getWorld()
-							.getCollidedEntities(new Rectangle((int) character.getHandX(), (int) character.getHandY(), HAND_SIZE, HAND_SIZE));
-					for (Entity vic : entities) {
-						if (vic instanceof Character && vic != character) {
-							Sound.playPublicSound(character.x, character.y, "hurt1", "hurt2", "hurt3");
-							Batch harmBatch = new Batch("harm");
-							harmBatch.add("uuid", uuid);
-							harmBatch.add("victim", vic.uuid.toString());
-							harmBatch.add("damage", (float) (Utilities.distance(character.x, character.y, vic.x, vic.y) / 2f + 5f));
-							harmBatch.add("xv", ((vic.x + vic.width / 2) - (character.x + character.width / 2 + HAND_SIZE / 2)) / 3);
-							harmBatch.add("yv", ((vic.y + vic.height / 2) - (character.y + character.height / 2 + HAND_SIZE / 2)) / 3);
-							MainClient.networkClient.send(harmBatch);
-							break;
-						}
-					}
-				}
-			}
-		} else {
-			click = false;
-			if (handDistance > HAND_DISTANCE) {
-				handDistance /= 1.1;
-				if (handDistance < HAND_DISTANCE) {
-					handDistance = HAND_DISTANCE;
-				}
+				if (footstepTimer < FOOTSTEP_INTERVAL) footstepTimer++;
+				else footstepTimer = 0;
+			} else {
+				footstepTimer = -1;
 			}
 		}
 
-		character.setHandX((float) (character.x + character.width / 2 - HAND_SIZE / 2 + Math.cos(theta) * handDistance));
-		character.setHandY((float) (character.y + character.height / 2 - HAND_SIZE / 2 + Math.sin(theta) * handDistance));
+		Vector2 center = character.position.clone().add(character.width / 2, character.height / 2);
+		Vector2 handDirection = new Vector2(CURSOR.x, CURSOR.y).subtract(center).normalize();
+		character.hand.position.set(center.add(handDirection.scale(HAND_DISTANCE + handExtend)));
 
-		character.x += xVelocity;
-		character.y += yVelocity;
+		Batch updateBatch = new Batch("update");
+		updateBatch.add("uuid", uuid.toString());
+		updateBatch.add("x", character.position.x);
+		updateBatch.add("y", character.position.y);
+		updateBatch.add("hx", character.hand.position.x);
+		updateBatch.add("hy", character.hand.position.y);
+		ClientMain.networkClient.send(updateBatch);
 
-		character.x = Math.min(MainClient.WIDTH - character.width, Math.max(0, character.x));
-		character.y = Math.min(MainClient.HEIGHT - character.height, Math.max(0, character.y));
-
-		if (MainClient.age % 3 == 0) {
-			Batch updateBatch = new Batch("update");
-			updateBatch.add("uuid", uuid.toString());
-			updateBatch.add("x", character.x);
-			updateBatch.add("y", character.y);
-			updateBatch.add("hx", character.getHandX());
-			updateBatch.add("hy", character.getHandY());
-			MainClient.networkClient.send(updateBatch);
+		if (energy < 1.0f) {
+			energy += 0.001f;
+			if (energy > 1.0f) energy = 1.0f;
 		}
 	}
 

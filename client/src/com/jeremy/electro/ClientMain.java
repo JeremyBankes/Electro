@@ -40,7 +40,7 @@ import com.jeremy.electro.network.NetworkClient;
 import com.jeremy.electro.state.State;
 import com.sineshore.serialization.Batch;
 
-public class MainClient {
+public class ClientMain {
 
 	public static final int TPS = 60;
 	public static final int WIDTH = 900;
@@ -64,14 +64,14 @@ public class MainClient {
 	public static NetworkClient networkClient;
 
 	public static Font font = new Font("Consolas", Font.BOLD, 16);
-	public static final Color HACKER_GREEN = new Color(0x04b700);
+	public static final Color ACCENT_COLOR = new Color(0xa17554);
 
 	public static void main(String[] args) {
 		frame = new JFrame("Electro");
 		panel = new JPanel(new BorderLayout(0, 0), true);
 
 		try {
-			frame.setIconImage(ImageIO.read(MainClient.class.getResourceAsStream("/icon.png")));
+			frame.setIconImage(ImageIO.read(ClientMain.class.getResourceAsStream("/icon.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -128,15 +128,15 @@ public class MainClient {
 		dialog.setBorder(new EmptyBorder(0, 5, 0, 5));
 
 		input.setBackground(Color.BLACK);
-		input.setForeground(HACKER_GREEN);
-		input.setCaretColor(HACKER_GREEN);
+		input.setForeground(ACCENT_COLOR);
+		input.setCaretColor(ACCENT_COLOR);
 		input.setSelectedTextColor(Color.BLACK);
-		input.setSelectionColor(HACKER_GREEN);
+		input.setSelectionColor(ACCENT_COLOR);
 		dialog.setBackground(Color.BLACK);
-		dialog.setForeground(HACKER_GREEN);
-		dialog.setCaretColor(HACKER_GREEN);
+		dialog.setForeground(ACCENT_COLOR);
+		dialog.setCaretColor(ACCENT_COLOR);
 		dialog.setSelectedTextColor(Color.BLACK);
-		dialog.setSelectionColor(HACKER_GREEN);
+		dialog.setSelectionColor(ACCENT_COLOR);
 		((DefaultCaret) dialog.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		chatPanel.add(scollPane, BorderLayout.CENTER);
@@ -152,7 +152,7 @@ public class MainClient {
 				if (input.getText().startsWith("/")) {
 					if (input.getText().equalsIgnoreCase("/respawn")) {
 						if (Player.alive) {
-							MainClient.sendMessage("[!] You are already alive.");
+							ClientMain.sendMessage("[!] You are already alive.");
 						} else {
 							new Timer().schedule(new TimerTask() {
 								int i = 10;
@@ -162,10 +162,10 @@ public class MainClient {
 									if (i <= 0) {
 										Batch respawnBatch = new Batch("respawn");
 										respawnBatch.add("uuid", Player.uuid);
-										MainClient.networkClient.send(respawnBatch);
+										ClientMain.networkClient.send(respawnBatch);
 										this.cancel();
 									} else {
-										MainClient.sendMessage("[!] Respawning in " + i + "...");
+										ClientMain.sendMessage("[!] Respawning in " + i + "...");
 									}
 									i--;
 								}
@@ -178,13 +178,22 @@ public class MainClient {
 						harmBatch.add("damage", Player.maxHealth);
 						harmBatch.add("xv", 0f);
 						harmBatch.add("yv", 0f);
-						MainClient.networkClient.send(harmBatch);
+						ClientMain.networkClient.send(harmBatch);
 					} else if (input.getText().equalsIgnoreCase("/exit")) {
+						try {
+							ClientMain.networkClient.disconnect();
+							Player.name = null;
+						} catch (IOException exception) {
+							exception.printStackTrace();
+						}
 						State.currentState = State.LOBBY_STATE;
+						State.LOBBY_STATE.message = "Click the button to play!";
+						welcome();
 					} else {
 						sendMessage("[!] Command Help:");
 						sendMessage("[!]   /Respawn - Revives you!");
 						sendMessage("[!]   /Die     - Kills yourself");
+						sendMessage("[!]   /Exit    - Leaves to menu");
 					}
 				} else {
 					if (!networkClient.isConnected()) {
@@ -193,7 +202,7 @@ public class MainClient {
 						Batch messageBatch = new Batch("message");
 						messageBatch.add("uuid", Player.uuid);
 						messageBatch.add("message", input.getText());
-						MainClient.networkClient.send(messageBatch);
+						ClientMain.networkClient.send(messageBatch);
 					}
 				}
 				input.setText("");
@@ -203,7 +212,7 @@ public class MainClient {
 		panel.add(canvas, BorderLayout.CENTER);
 		panel.add(chatPanel, BorderLayout.WEST);
 
-		thread = new Thread(MainClient::run, "main");
+		thread = new Thread(ClientMain::run, "main");
 
 		frame.setContentPane(panel);
 		frame.setResizable(false);
@@ -222,7 +231,7 @@ public class MainClient {
 		Input.init();
 
 		System.out.println("Your UUID: " + Player.uuid);
-		sendMessage("   Welcome to Electro, A simple game written from scratch in Java over 4 days for Electro-Tech 11.\n\nHave Fun!\n   ~ Jeremy");
+		welcome();
 
 		long currentTime;
 		final long second = 1000000000;
@@ -250,6 +259,11 @@ public class MainClient {
 		}
 	}
 
+	private static void welcome() {
+		clearDialog();
+		sendMessage("Welcome to Electro, A simple game written from scratch in Java over 4 days for Electro-Tech 11.\n\nHave Fun!\n   ~ Jeremy");
+	}
+
 	public static void tick() {
 		State.currentState.tick();
 		age++;
@@ -262,7 +276,7 @@ public class MainClient {
 		}
 		Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 		g.setRenderingHints((Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints"));
-		g.setFont(MainClient.font);
+		g.setFont(ClientMain.font);
 		g.setColor(canvas.getBackground());
 		g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 		State.currentState.render(g);

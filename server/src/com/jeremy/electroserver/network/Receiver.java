@@ -5,18 +5,18 @@ import java.io.OutputStream;
 import com.jeremy.electroserver.PlayerClient;
 import com.jeremy.electroserver.ServerMain;
 import com.jeremy.electroserver.world.entity.Character;
+import com.jeremy.networking.Endpoint;
 import com.sineshore.serialization.Batch;
 
 public class Receiver {
 
-	public static void receive(OutputStream outputStream, Batch batch, String address, int port) {
+	public static void receive(OutputStream outputStream, Batch batch, Endpoint endpoint) {
 		try {
 			String type = batch.getName();
 			String uuid = (String) batch.get("uuid");
 			if (type.equals("connect")) {
 				String name = (String) batch.get("name");
-				// int udpPort = (int) batch.get("udp");
-				PlayerClient client = new PlayerClient(name, uuid, outputStream, address, port);
+				PlayerClient client = new PlayerClient(name, uuid, outputStream, endpoint);
 				ServerMain.networkServer.registered.put(uuid, client);
 				client.send(ServerMain.getWorld().getWorldBatch());
 				ServerMain.getWorld().getEntities().forEach(entity -> client.send(entity.getSpawnBatch()));
@@ -65,7 +65,9 @@ public class Receiver {
 				ServerMain.getWorld().spawnEntity(new Character(client));
 				ServerMain.networkServer.broadcastMessage("[!] " + client.getName() + " has respawned!");
 			} else if (type.equals("message")) {
-				ServerMain.networkServer.broadcastMessage("<" + client.getName() + "> " + batch.get("message"));
+				String message = String.format("<%s> %s", client.getName(), batch.get("message"));
+				ServerMain.networkServer.broadcastMessage(message);
+				System.out.println(message);
 			} else {
 				System.out.println("Unhandled batch for player " + client + ": " + batch);
 			}

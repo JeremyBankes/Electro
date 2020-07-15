@@ -1,12 +1,16 @@
 package com.jeremy.electro.entity;
 
+import static java.lang.Math.*;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
+
+import com.jeremy.utilities.Vector2;
 
 public class Character extends Entity {
 
 	public String name;
-	private Hand hand;
+	public Hand hand;
 
 	public Character(String uuid) {
 		super(uuid);
@@ -23,34 +27,18 @@ public class Character extends Entity {
 		super.render(g);
 		hand.render(g);
 		g.setColor(Color.WHITE);
-		g.drawString(name, x + width / 2 - g.getFontMetrics().stringWidth(name) / 2, y - 5);
+		g.drawString(name, position.x + width / 2 - g.getFontMetrics().stringWidth(name) / 2, position.y - 5);
 	}
 
-	public float getHandX() {
-		return hand.x;
-	}
+	public class Hand {
 
-	public float getHandY() {
-		return hand.y;
-	}
+		private Hand() {}
 
-	public void setHandX(float x) {
-		hand.x = x;
-	}
-
-	public void setHandY(float y) {
-		hand.y = y;
-	}
-
-	private class Hand {
-
-		private float x, y;
+		public Vector2 position = new Vector2();
 
 		private void render(Graphics2D g) {
 			g.setColor(color.darker());
-			g.fillRect((int) x, (int) y, Player.HAND_SIZE, Player.HAND_SIZE);
-			g.setColor(Color.WHITE);
-			g.drawRect((int) x, (int) y, Player.HAND_SIZE, Player.HAND_SIZE);
+			g.fillRect(round(position.x - Player.HAND_SIZE / 2), round(position.y - Player.HAND_SIZE / 2), Player.HAND_SIZE, Player.HAND_SIZE);
 		}
 
 	}

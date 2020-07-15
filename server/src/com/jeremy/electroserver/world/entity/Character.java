@@ -28,7 +28,7 @@ public class Character extends Creature {
 		this.width = WIDTH;
 		this.height = HEIGHT;
 		Random random = new Random();
-		color = new Color(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1f).darker();
+		color = Color.getHSBColor(random.nextFloat(), 0.75f, 0.75f);
 		x = random.nextInt(960 - 150 + 1) + 150;
 		y = random.nextInt(720 - 150 + 1) + 150;
 	}

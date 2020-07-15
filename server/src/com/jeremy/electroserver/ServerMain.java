@@ -35,10 +35,8 @@ public class ServerMain {
 		System.out.println("The server has successfully initialized.");
 		long currentTime;
 		final long second = 1000000000;
-		int ticks = 0;
 		long tickTime = second / 60;
 		long tickTimer = System.nanoTime();
-		long secondTimer = System.nanoTime();
 		while (running) {
 			currentTime = System.nanoTime();
 			if (currentTime - tickTimer > tickTime) {
@@ -46,12 +44,7 @@ public class ServerMain {
 					tickTimer = currentTime;
 				}
 				tickTimer += tickTime;
-				ticks++;
 				tick();
-			}
-			if (currentTime - secondTimer > second) {
-				secondTimer += second;
-				ticks = 0;
 			}
 		}
 	}
@@ -73,6 +66,7 @@ public class ServerMain {
 			"[!] {1} tore {0}'s life from them.", //
 			"[!] {1} brought {0} to an end.", //
 			"[!] {1} stole {0}'s life.", //
+			"[!] {1} obliterated {0}.", //
 			"[!] {1} ended {0}." //
 
 	};

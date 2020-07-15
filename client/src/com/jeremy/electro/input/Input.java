@@ -12,7 +12,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.HashSet;
 
-import com.jeremy.electro.MainClient;
+import com.jeremy.electro.ClientMain;
 
 public class Input {
 
@@ -25,7 +25,7 @@ public class Input {
 	private static int wheel;
 
 	public static void init() {
-		MainClient.canvas.addMouseListener(new MouseAdapter() {
+		ClientMain.canvas.addMouseListener(new MouseAdapter() {
 
 			@Override
 			public void mousePressed(MouseEvent event) {
@@ -39,7 +39,7 @@ public class Input {
 
 		});
 
-		MainClient.canvas.addMouseMotionListener(new MouseMotionListener() {
+		ClientMain.canvas.addMouseMotionListener(new MouseMotionListener() {
 
 			@Override
 			public void mouseMoved(MouseEvent event) {
@@ -53,14 +53,14 @@ public class Input {
 
 		});
 
-		MainClient.canvas.addMouseWheelListener(new MouseWheelListener() {
+		ClientMain.canvas.addMouseWheelListener(new MouseWheelListener() {
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent event) {
 				wheel = event.getWheelRotation();
 			}
 		});
 
-		MainClient.canvas.addKeyListener(new KeyAdapter() {
+		ClientMain.canvas.addKeyListener(new KeyAdapter() {
 
 			@Override
 			public void keyPressed(KeyEvent event) {
@@ -75,7 +75,7 @@ public class Input {
 
 		});
 
-		MainClient.canvas.addFocusListener(new FocusAdapter() {
+		ClientMain.canvas.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent event) {
 				PRESSED_KEYS.clear();
