@@ -17,7 +17,9 @@ import com.jeremy.electro.ClientMain;
 public class Input {
 
 	private static final HashSet<Integer> PRESSED_MOUSE = new HashSet<>();
+	private static final HashSet<Integer> JUST_PRESSED_MOUSE = new HashSet<>();
 	private static final HashSet<Integer> PRESSED_KEYS = new HashSet<>();
+	private static final HashSet<Integer> JUST_PRESSED_KEYS = new HashSet<>();
 	private static final HashSet<TypeCallback> TYPE_CALLBACKS = new HashSet<>();
 
 	public static final Point CURSOR = new Point();
@@ -35,6 +37,7 @@ public class Input {
 			@Override
 			public void mouseReleased(MouseEvent event) {
 				PRESSED_MOUSE.remove(event.getButton());
+				JUST_PRESSED_MOUSE.remove(event.getButton());
 			}
 
 		});
@@ -71,6 +74,7 @@ public class Input {
 			@Override
 			public void keyReleased(KeyEvent event) {
 				PRESSED_KEYS.remove(event.getKeyCode());
+				JUST_PRESSED_KEYS.remove(event.getKeyCode());
 			}
 
 		});
@@ -88,9 +92,29 @@ public class Input {
 		return PRESSED_MOUSE.contains(button);
 	}
 
+	public static boolean isButtonJustPressed(int button) {
+		if (isButtonPressed(button)) {
+			if (!JUST_PRESSED_MOUSE.contains(button)) {
+				JUST_PRESSED_MOUSE.add(button);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static boolean isKeyPressed(int... keys) {
 		for (int key : keys) {
 			if (PRESSED_KEYS.contains(key)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean isKeyJustPressed(int key) {
+		if (isKeyPressed(key)) {
+			if (!JUST_PRESSED_KEYS.contains(key)) {
+				JUST_PRESSED_KEYS.add(key);
 				return true;
 			}
 		}

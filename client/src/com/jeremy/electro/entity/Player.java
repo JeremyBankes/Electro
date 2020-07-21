@@ -25,7 +25,8 @@ public class Player {
 	public static final int SWING_APEX = 10;
 	public static final int FOOTSTEP_INTERVAL = 20;
 	public static final float KNOCKBACK = 15.0f;
-	public static final float DASH_ENERGY = 0.15f;
+	public static final float SWING_ENERGY = 0.10f;
+	public static final float DASH_ENERGY = 0.20f;
 	public static final float DASH_POWER = 10f;
 
 	public static String name;
@@ -46,7 +47,7 @@ public class Player {
 	private static int footstepTimer = -1;
 
 	public static void tick() {
-		if (State.GAME_STATE.getWorld() == null || character == null) return;
+		if (State.GAME_STATE.getWorld() == null || character == null || health <= 0) return;
 
 		input.set(0.0f);
 		if (isKeyPressed(KEY_UP, KEY_W)) input.y -= 1.0f;
@@ -57,7 +58,7 @@ public class Player {
 
 		float acceleration = ACCELERATION;
 		Vector2 want = input.scale(MAX_SPEED);
-		if (Input.isButtonPressed(MOUSE_RIGHT) && !input.isZero()) {
+		if (Input.isButtonJustPressed(MOUSE_RIGHT) && !input.isZero()) {
 			if (!dash) {
 				if (energy > DASH_ENERGY) {
 					want.scale(DASH_POWER);
@@ -65,6 +66,8 @@ public class Player {
 					Sound.playPublicSound(character.position.x, character.position.y, "dash");
 					energy -= DASH_ENERGY;
 					dash = true;
+				} else {
+					Sound.playLocalSound("no-energy");
 				}
 			}
 		} else dash = false;
@@ -88,9 +91,14 @@ public class Player {
 		character.position.x = Math.min(ClientMain.WIDTH - character.width, Math.max(0, character.position.x));
 		character.position.y = Math.min(ClientMain.HEIGHT - character.height, Math.max(0, character.position.y));
 
-		if (isButtonPressed(MOUSE_LEFT) && swingTimer == -1) {
-			Sound.playPublicSound(character.position.x, character.position.y, "swing1", "swing2", "swing3");
-			swingTimer = 0;
+		if (isButtonJustPressed(MOUSE_LEFT) && swingTimer == -1) {
+			if (energy > SWING_ENERGY) {
+				Sound.playPublicSound(character.position.x, character.position.y, "swing1", "swing2", "swing3");
+				swingTimer = 0;
+				energy -= SWING_ENERGY;
+			} else {
+				Sound.playLocalSound("no-energy");
+			}
 		}
 		if (swingTimer != -1) {
 			float progress = (float) (swingTimer >= SWING_LIFETIME ? 0 : swingTimer) / SWING_LIFETIME;
