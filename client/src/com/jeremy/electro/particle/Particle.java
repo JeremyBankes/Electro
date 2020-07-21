@@ -1,4 +1,4 @@
-package com.jeremy.electro.Particle;
+package com.jeremy.electro.particle;
 
 import static java.lang.Math.*;
 

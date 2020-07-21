@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import com.jeremy.electro.ClientMain;
-import com.jeremy.electro.Particle.Particle;
 import com.jeremy.electro.entity.Entity;
+import com.jeremy.electro.particle.Particle;
 
 public class World {
 

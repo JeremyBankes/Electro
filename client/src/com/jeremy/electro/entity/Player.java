@@ -62,6 +62,7 @@ public class Player {
 				if (energy > DASH_ENERGY) {
 					want.scale(DASH_POWER);
 					acceleration *= DASH_POWER;
+					Sound.playPublicSound(character.position.x, character.position.y, "dash");
 					energy -= DASH_ENERGY;
 					dash = true;
 				}
@@ -104,7 +105,7 @@ public class Player {
 					Batch harmBatch = new Batch("harm");
 					harmBatch.add("uuid", uuid);
 					harmBatch.add("victim", victim.uuid.toString());
-					harmBatch.add("damage", 10.0f);
+					harmBatch.add("damage", 25.0f + (float) Math.random() * 10.0f);
 					harmBatch.add("xv", knockback.x);
 					harmBatch.add("yv", knockback.y);
 					ClientMain.networkClient.send(harmBatch);

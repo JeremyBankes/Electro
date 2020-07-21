@@ -12,7 +12,7 @@ import com.jeremy.utilities.Utilities;
 import com.sineshore.serialization.Batch;
 
 public class LobbyState extends State {
-	
+
 	private boolean showButton;
 	private boolean buttonHover;
 	private boolean click;
@@ -28,13 +28,11 @@ public class LobbyState extends State {
 		ClientMain.clearDialog();
 		ClientMain.setInputEnabled(true);
 
-		Player.name = "Jeremy";
-		
 		setDisplayText("Waiting on server address...");
 		while (!ClientMain.networkClient.isConnected()) {
 			try {
 				ClientMain.sendMessage("What is the server address you would like to connect to?");
-				ClientMain.setInput("localhost");
+				ClientMain.setInput("jeremybankes.com");
 				ClientMain.focusChat();
 				String address = ClientMain.getInput();
 				setDisplayText("Connecting to '" + address + "'...");
@@ -76,7 +74,7 @@ public class LobbyState extends State {
 		connectBatch.add("name", Player.name);
 		ClientMain.networkClient.send(connectBatch);
 		State.currentState = State.GAME_STATE;
-		
+
 		this.showButton = true;
 	}
 

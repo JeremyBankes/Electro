@@ -1,20 +1,22 @@
 package com.jeremy.electro.audio;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
 import java.util.Random;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineEvent.Type;
-import javax.sound.sampled.LineListener;
 
 import com.jeremy.electro.ClientMain;
 import com.jeremy.electro.entity.Player;
 import com.sineshore.serialization.Batch;
 
 public class Sound {
+
+	private static HashMap<String, AudioInputStream> sounds = new HashMap<>();
 
 	public static void playLocalSound(String name, float volume) {
 		Thread thread = new Thread(() -> {
@@ -43,42 +45,27 @@ public class Sound {
 	}
 
 	private static void playClip(String path, float volume) throws Exception {
-		class AudioListener implements LineListener {
-			private boolean done = false;
+		AudioInputStream inputStream;
+		if (sounds.containsKey(path)) {
+			inputStream = sounds.get(path);
+			inputStream.reset();
+		} else {
+			inputStream = AudioSystem.getAudioInputStream(Sound.class.getResource(path));
 
-			@Override
-			public synchronized void update(LineEvent event) {
-				Type eventType = event.getType();
-				if (eventType == Type.STOP || eventType == Type.CLOSE) {
-					done = true;
-					notifyAll();
-				}
+			byte[] buffer = new byte[1024 * 32];
+			int read = 0;
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(buffer.length);
+			while ((read = inputStream.read(buffer, 0, buffer.length)) != -1) {
+				baos.write(buffer, 0, read);
 			}
-
-			public synchronized void waitUntilDone() throws InterruptedException {
-				while (!done) {
-					wait();
-				}
-			}
+			inputStream = new AudioInputStream(new ByteArrayInputStream(baos.toByteArray()), inputStream.getFormat(), AudioSystem.NOT_SPECIFIED);
+			sounds.put(path, inputStream);
 		}
-
-		AudioListener listener = new AudioListener();
-		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(Sound.class.getResource(path));
-		try {
-			Clip clip = AudioSystem.getClip();
-			clip.addLineListener(listener);
-			clip.open(audioInputStream);
-			FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-			control.setValue((float) (20f * Math.log10(volume)));
-			try {
-				clip.start();
-				listener.waitUntilDone();
-			} finally {
-				clip.close();
-			}
-		} finally {
-			audioInputStream.close();
-		}
+		Clip clip = AudioSystem.getClip();
+		clip.open(inputStream);
+		FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+		control.setValue((float) (20f * Math.log10(volume)));
+		clip.start();
 	}
 
 }
