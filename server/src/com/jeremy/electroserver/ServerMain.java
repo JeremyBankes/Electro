@@ -19,16 +19,16 @@ public class ServerMain {
 			networkServer = new NetworkServer();
 			System.out.println("Starting network...");
 			networkServer.start();
+
+			System.out.println("Creating world...");
+			world = new World("Branch");
+
+			System.out.println("Starting server logic...");
+			running = true;
+			run();
 		} catch (IOException exception) {
 			exception.printStackTrace();
 		}
-
-		System.out.println("Creating world...");
-		world = new World("Branch");
-
-		System.out.println("Starting server logic...");
-		running = true;
-		run();
 	}
 
 	private static void run() {
