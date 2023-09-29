@@ -3,6 +3,7 @@
 A simple 2D networked boxing game!
 
 [![PlayButton]](https://github.com/JeremyBankes/Electro/releases/download/1.0/electro.jar)
+
 [PlayButton]: https://img.shields.io/badge/Download_Electro-A17554?style=for-the-badge
 
 ###### This project requires [Java 1.8+](https://java.com/en/download/) to run.
